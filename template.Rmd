@@ -17,3 +17,30 @@ litters_df = read_csv("data/FAS_litters.csv")
 litters_df = janitor::clean_names(litters_df)
 ```
 
+look at the data
+
+```{r}
+litters_df
+
+head(litters_df)
+tail(litters_df)
+```
+
+```{r, eval = FALSE}
+View(litters_df)
+```
+
+```{r}
+skimr::skim(litters_df)
+```
+
+`read_csv` options..
+
+```{r}
+read_csv("data/FAS_litters.csv", na = c("", "NA", 999, 88), skip = 2)
+# didn't change the data in fact!
+```
+
+
+## Other file formats
+
