@@ -1,0 +1,156 @@
+---
+title: "Data Manipulation with `dplyr`"
+output: github_document
+---
+
+Once you've imported data, you're going to beed to do some cleaning up.
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+```
+
+Load the data and clean the names of variables.
+
+```{r}
+library(tidyverse)
+
+options(tibble.print_min = 3)
+
+litters_data = 
+  read_csv("./data/FAS_litters.csv")
+litters_data = 
+  janitor::clean_names(litters_data)
+
+pups_data = read_csv("./data/FAS_pups.csv")
+pups_data = janitor::clean_names(pups_data)
+```
+
+
+### `select`
+
+Select specific variables.
+
+```{r}
+select(litters_data, group, litter_number, gd0_weight, pups_born_alive)
+```
+
+Select some variables in a range of columns.
+
+```{r}
+select(litters_data, group:gd_of_birth)
+```
+
+Delete some variables.
+
+```{r}
+select(litters_data, -pups_survive)
+select(litters_data, -pups_survive, -group)
+```
+
+Select some variables and rename them.
+
+```{r}
+select(litters_data, GROUP = group, LiTtEr_NuMbEr = litter_number)
+```
+
+Rename some variables and show all the variables in a tibble.
+
+```{r}
+# litter_name=(overwrite the original data/base dataset) OR litter_name2=(old-fashioned)
+rename(litters_data, GROUP = group, LiTtEr_NuMbEr = litter_number)
+```
+
+Select variables that start or end with some words.
+
+```{r}
+select(litters_data, starts_with("gd"))
+select(litters_data, ends_with("weight"))
+```
+
+
+Change the order of the variables.
+
+```{r}
+select(litters_data, litter_number, pups_survive, everything())
+```
+
+
+### `filter`
+
+* `gd_of_birth == 20`
+* `pups_born_alive >=2`
+* `pups_survivie !=4`
+* `!((pups_survivie == 4) & (gd_of_birth == 20))`
+* `group %in% c("Con7", "Con8")` #useful for character variables
+* `group == "Con7" & gd_of_birth == 20`
+
+```{r}
+filter(litters_data, gd_of_birth == 20)
+```
+
+```{r}
+filter(litters_data, group == "Con7" & gd_of_birth == 20)
+```
+
+* `drop_na(litters_data)` will remove any row with a missing value.
+* `drop_na(litters_data, wt_increase)` will remove rows for which `wt_increasing` is missing.
+Use them carefully!!
+
+
+### `mutate`
+
+Create a new variable.
+
+```{r}
+mutate(litters_data,
+       wt_gain = gd18_weight - gd0_weight,
+       group = str_to_lower(group),
+       # wt_gain_kg = wt_gain * 2.2
+       )
+```
+
+### `arrange`
+
+Sort data according to the values.
+
+```{r}
+head(arrange(litters_data, group, pups_born_alive), 10)
+```
+
+Sort in descending order.
+
+```{r}
+head(arrange(litters_data, desc(group), pups_born_alive), 10)
+```
+
+### `%>%` Piping
+
+```{r}
+litters_data = 
+  read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>%
+  janitor::clean_names() %>% #shortcut: Ctrl+Shift+M
+  select(-pups_survive) %>%
+  mutate(
+    wt_gain = gd18_weight - gd0_weight,
+    group = str_to_lower(group)) %>% 
+  drop_na(wt_gain)
+
+# still run the code each line step by step
+
+litters_data
+```
+
+
+Using piping with a non-tidyverse function (incomplete)
+
+```{r}
+litters_data %>% 
+  lm(wt_gain ~ pups_born_alive, data = .) %>% 
+  broom::tidy()
+```
+
